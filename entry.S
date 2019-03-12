@@ -177,7 +177,7 @@ encl_trap_handler:
 
   la t0, handle_interrupts
   jalr t0
-  
+  /* check a0 and a1 for signal */  
   j return_to_encl
 1:
   /* handle exceptions */
