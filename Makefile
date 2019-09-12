@@ -1,17 +1,17 @@
 CC = riscv64-unknown-linux-gnu-gcc
-CFLAGS = -Wall -Werror -fPIC
-SRCS = page_fault.c interrupt.c printf.c syscall.c string.c
+CFLAGS = -Wall -Werror -fPIC -fno-builtin $(OPTIONS_FLAGS)
+SRCS = boot.c interrupt.c printf.c syscall.c string.c linux_wrap.c io_wrap.c rt_util.c mm.c env.c freemem.c paging.c
 ASM_SRCS = entry.S
 RUNTIME = eyrie-rt
 LINK = riscv64-unknown-linux-gnu-ld
-LDFLAGS = -static
+LDFLAGS = -static -nostdlib
 
-SDK_LIB_DIR = ../lib
+SDK_LIB_DIR = $(KEYSTONE_SDK_DIR)/lib
 SDK_INCLUDE_EDGE_DIR = $(SDK_LIB_DIR)/edge/include
 SDK_EDGE_LIB = $(SDK_LIB_DIR)/libkeystone-edge.a
 
 LDFLAGS += -L$(SDK_LIB_DIR)
-CFLAGS += -I$(SDK_INCLUDE_EDGE_DIR)
+CFLAGS += -I$(SDK_INCLUDE_EDGE_DIR) -I ./tmplib
 
 DISK_IMAGE = ../busybear-linux/busybear.bin
 MOUNT_DIR = ./tmp_busybear
@@ -21,10 +21,10 @@ ASM_OBJS = $(patsubst %.S,%.o,$(ASM_SRCS))
 
 TMPLIB = uaccess.o
 
-all: $(TMPLIB) $(RUNTIME)
+all: $(RUNTIME) $(OBJS)
 
-$(TMPLIB): 
-	make -C tmplib
+$(TMPLIB):
+	$(MAKE) -C tmplib
 
 $(DISK_IMAGE):
 	echo "missing $(DISK_IMAGE)."
@@ -43,9 +43,11 @@ $(RUNTIME): $(ASM_OBJS) $(OBJS) $(SDK_EDGE_LIB) $(TMPLIB)
 $(ASM_OBJS): $(ASM_SRCS)
 	$(CC) $(CFLAGS) -c $<
 
-%.o: %.c
-	$(CC) $(CFLAGS) -c $< 
+%.o: %.c  $(TMPLIB)
+	$(CC) $(CFLAGS) -c $<
 
 clean:
 	rm -f $(RUNTIME) *.o
-	make -C tmplib clean
+	$(MAKE) -C tmplib clean
+	# for legacy reasons, remove any lingering uaccess.h
+	rm -f uaccess.h

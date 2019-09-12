@@ -2,19 +2,12 @@
 // Copyright (c) 2018, The Regents of the University of California (Regents).
 // All Rights Reserved. See LICENSE for license details.
 //------------------------------------------------------------------------------
-#define STORE sd
-#define LOAD ld
-#define LWU lwu
-#define LOG_REGBYTES  3
-#define REGBYTES (1<<LOG_REGBYTES)
-#define ENCL_CONTEXT_SIZE (REGBYTES*35)
-#define HOST_CONTEXT_SIZE (REGBYTES*32)
 
-
-#ifndef __ASSEMBLER__
+#ifndef _REGS_H_
+#define _REGS_H_
 #include <stdint.h>
 
-struct regs_t {
+struct regs {
 	uintptr_t sepc; // use this slot as sepc
 	uintptr_t ra;
 	uintptr_t sp;
@@ -49,13 +42,11 @@ struct regs_t {
 	uintptr_t t6;
 };
 
-struct encl_ctx_t {
-	struct regs_t regs;
+struct encl_ctx {
+	struct regs regs;
   /* Supervisor CSRs */
 	uintptr_t sstatus;//32
 	uintptr_t sbadaddr;//33
 	uintptr_t scause;//34
 };
-
-
-#endif
+#endif /* _REGS_H_ */
